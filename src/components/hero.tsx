@@ -33,10 +33,10 @@ export function Hero() {
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="#tests"
+                  href="/onboarding"
                   className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  <span>Mulai Latihan</span>
+                  <span>Mulai Ujian</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link

@@ -8,7 +8,10 @@ import {
   Trash2, 
   Image as ImageIcon,
   Filter,
-  ChevronDown
+  ChevronDown,
+  BarChart3,
+  Target,
+  Users
 } from 'lucide-react'
 
 // Sample questions
