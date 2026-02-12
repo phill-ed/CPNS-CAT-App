@@ -1,43 +1,40 @@
 import { NextResponse } from 'next/server'
+import { questions } from '@/data/questions'
 
-// Sample questions data
-const questions = [
-  {
-    id: '1',
-    text: 'Siapa presiden pertama Indonesia?',
-    category: 'TWK',
-    difficulty: 'EASY',
-    points: 1,
-    testId: '1',
-    answers: [
-      { id: 'a', text: 'Sukarno', isCorrect: true },
-      { id: 'b', text: 'Suharto', isCorrect: false },
-      { id: 'c', text: 'Megawati', isCorrect: false },
-      { id: 'd', text: 'Joko Widodo', isCorrect: false }
-    ]
-  },
-  {
-    id: '2',
-    text: 'Apa ibu kota Indonesia yang baru?',
-    category: 'TWK',
-    difficulty: 'EASY',
-    points: 1,
-    testId: '1',
-    answers: [
-      { id: 'a', text: 'Jakarta', isCorrect: false },
-      { id: 'b', text: 'Nusantara', isCorrect: true },
-      { id: 'c', text: 'Bandung', isCorrect: false },
-      { id: 'd', text: 'Surabaya', isCorrect: false }
-    ]
-  }
-]
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    return NextResponse.json(questions)
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+    const subSubCategory = searchParams.get('subSubCategory')
+    const difficulty = searchParams.get('difficulty')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    
+    let filteredQuestions = questions
+    
+    if (category) {
+      filteredQuestions = filteredQuestions.filter(q => q.category === category)
+    }
+    
+    if (subSubCategory) {
+      filteredQuestions = filteredQuestions.filter(q => q.subSubCategory === subSubCategory)
+    }
+    
+    if (difficulty) {
+      filteredQuestions = filteredQuestions.filter(q => q.difficulty === difficulty)
+    }
+
+    // Shuffle questions for variety
+    const shuffled = filteredQuestions.sort(() => Math.random() - 0.5)
+    const limited = shuffled.slice(0, limit)
+
+    return NextResponse.json({
+      success: true,
+      data: limited,
+      total: limited.length
+    })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch questions' },
+      { success: false, error: 'Failed to fetch questions' },
       { status: 500 }
     )
   }

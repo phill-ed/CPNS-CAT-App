@@ -1,18 +1,18 @@
 "use client"
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Trophy, Home, RotateCcw } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Download } from 'lucide-react'
 
 export default function ResultsPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const sessionId = params.id as string
-
-  // Sample result
-  const score = 2
-  const total = 3
-  const percentage = Math.round((score / total) * 100)
+  
+  const categoryParam = params.id as string
+  const correct = parseInt(searchParams.get('correct') || '0')
+  const total = parseInt(searchParams.get('total') || '10')
+  const percentage = total > 0 ? Math.round((correct / total) * 100) : 0
   const passed = percentage >= 60
 
   return (
@@ -37,9 +37,7 @@ export default function ResultsPage() {
               {passed ? 'Selamat!' : 'Tetap Semangat!'}
             </h1>
             <p className="text-white/80">
-              {passed
-                ? 'Anda telah lulus ujian ini.'
-                : 'Anda belum lulus, coba lagi ya!'}
+              {passed ? 'Anda telah lulus ujian ini.' : 'Anda belum lulus, coba lagi ya!'}
             </p>
           </div>
 
@@ -64,7 +62,7 @@ export default function ResultsPage() {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="12"
-                    strokeDasharray={`${percentage * 4.4} 440`}
+                    strokeDasharray={`${Math.min(percentage * 4.4, 440)} 440`}
                     strokeLinecap="round"
                     className={passed ? 'text-green-500' : 'text-red-500'}
                   />
@@ -82,11 +80,11 @@ export default function ResultsPage() {
 
             <div className="flex items-center justify-center mt-4 space-x-8">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">{score}</div>
+                <div className="text-2xl font-bold text-green-500">{correct}</div>
                 <div className="text-sm text-gray-500">Benar</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-500">{total - score}</div>
+                <div className="text-2xl font-bold text-red-500">{total - correct}</div>
                 <div className="text-sm text-gray-500">Salah</div>
               </div>
               <div className="text-center">
@@ -105,31 +103,48 @@ export default function ResultsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm text-gray-500">Kategori</div>
-                <div className="font-medium text-gray-900 dark:text-white">TWK</div>
+                <div className="font-medium text-gray-900 dark:text-white">{categoryParam}</div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <div className="text-sm text-gray-500">Status</div>
+                <div className={`font-medium ${passed ? 'text-green-500' : 'text-red-500'}`}>
+                  {passed ? 'LULUS' : 'TIDAK LULUS'}
+                </div>
               </div>
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm text-gray-500">Waktu</div>
-                <div className="font-medium text-gray-900 dark:text-white">10:00</div>
+                <div className="font-medium text-gray-900 dark:text-white">{total} menit</div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <div className="text-sm text-gray-500">Passing Grade</div>
+                <div className="font-medium text-gray-900 dark:text-white">60%</div>
               </div>
             </div>
           </div>
 
           {/* Actions */}
           <div className="p-6 border-t border-gray-200 dark:border-gray-700 space-y-3">
-            <Link
-              href="/"
-              className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span>Kembali ke Beranda</span>
-            </Link>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/"
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Home className="w-5 h-5" />
+                <span>Beranda</span>
+              </Link>
 
-            <button
-              onClick={() => router.push('/test/1')}
-              className="flex items-center justify-center space-x-2 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <RotateCcw className="w-5 h-5" />
-              <span>Coba Lagi</span>
+              <button
+                onClick={() => router.push(`/test/${categoryParam}`)}
+                className="flex items-center justify-center space-x-2 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <RotateCcw className="w-5 h-5" />
+                <span>Coba Lagi</span>
+              </button>
+            </div>
+
+            <button className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <Download className="w-5 h-5" />
+              <span>Download Sertifikat</span>
             </button>
           </div>
         </div>

@@ -1,42 +1,30 @@
 import { NextResponse } from 'next/server'
+import { tests } from '@/data/tests'
 
-// Sample tests data - replace with database query
-const tests = [
-  {
-    id: '1',
-    title: 'CPNAS TWK 2024',
-    category: 'TWK',
-    duration: 100,
-    totalQuestions: 110,
-    passingScore: 60,
-    isActive: true
-  },
-  {
-    id: '2',
-    title: 'CPNAS TKP 2024',
-    category: 'TKP',
-    duration: 100,
-    totalQuestions: 35,
-    passingScore: 60,
-    isActive: true
-  },
-  {
-    id: '3',
-    title: 'CPNAS PU 2024',
-    category: 'PU',
-    duration: 100,
-    totalQuestions: 30,
-    passingScore: 60,
-    isActive: true
-  }
-]
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    return NextResponse.json(tests)
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+    const subCategory = searchParams.get('subCategory')
+    
+    let filteredTests = tests
+    
+    if (category) {
+      filteredTests = filteredTests.filter(t => t.category === category)
+    }
+    
+    if (subCategory) {
+      filteredTests = filteredTests.filter(t => t.subSubCategory === subCategory)
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: filteredTests,
+      total: filteredTests.length
+    })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch tests' },
+      { success: false, error: 'Failed to fetch tests' },
       { status: 500 }
     )
   }
