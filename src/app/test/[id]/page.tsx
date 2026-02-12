@@ -1,0 +1,245 @@
+"use client"
+
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { Clock, ArrowLeft, ArrowRight, CheckCircle, Send } from 'lucide-react'
+
+interface Question {
+  id: string
+  text: string
+  points: number
+  answers: { id: string; text: string }[]
+}
+
+interface TestInfo {
+  title: string
+  duration: number
+  totalQuestions: number
+}
+
+const sampleQuestions: Question[] = [
+  {
+    id: '1',
+    text: 'Siapa presiden pertama Indonesia?',
+    points: 1,
+    answers: [
+      { id: 'a', text: 'Sukarno' },
+      { id: 'b', text: 'Suharto' },
+      { id: 'c', text: 'Megawati' },
+      { id: 'd', text: 'Joko Widodo' },
+    ]
+  },
+  {
+    id: '2',
+    text: 'Apa ibu kota Indonesia yang baru?',
+    points: 1,
+    answers: [
+      { id: 'a', text: 'Jakarta' },
+      { id: 'b', text: 'Nusantara' },
+      { id: 'c', text: 'Bandung' },
+      { id: 'd', text: 'Surabaya' },
+    ]
+  },
+  {
+    id: '3',
+    text: 'Kapan Indonesia merdeka?',
+    points: 1,
+    answers: [
+      { id: 'a', text: '17 Agustus 1945' },
+      { id: 'b', text: '1 Juni 1945' },
+      { id: 'c', text: '20 Mei 1945' },
+      { id: 'd', text: '18 Agustus 1945' },
+    ]
+  }
+]
+
+export default function TestPage() {
+  const params = useParams()
+  const router = useRouter()
+  const testId = params.id as string
+
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [timeRemaining, setTimeRemaining] = useState(600) // 10 minutes
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const testInfo: TestInfo = {
+    title: 'CPNAS TWK 2024',
+    duration: 100,
+    totalQuestions: 3
+  }
+
+  // Timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleSubmit()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleAnswer = (questionId: string, answerId: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: answerId
+    }))
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    router.push(`/results/${testId}`)
+  }
+
+  const question = sampleQuestions[currentQuestion]
+  const answeredCount = Object.keys(answers).length
+  const progress = (answeredCount / sampleQuestions.length) * 100
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="sticky top-0 bg-white dark:bg-gray-800 shadow-sm z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {testInfo.title}
+            </h1>
+            <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+              timeRemaining < 60
+                ? 'bg-red-100 text-red-600'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+            }`}>
+              <Clock className="w-5 h-5" />
+              <span className="font-mono font-bold">{formatTime(timeRemaining)}</span>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {answeredCount} dari {testInfo.totalQuestions} soal dijawab
+          </p>
+        </div>
+      </header>
+
+      {/* Question Navigation */}
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex flex-wrap gap-2 mb-6">
+          {sampleQuestions.map((q, index) => (
+            <button
+              key={q.id}
+              onClick={() => setCurrentQuestion(index)}
+              className={`w-10 h-10 rounded-lg font-medium text-sm transition-colors ${
+                index === currentQuestion
+                  ? 'bg-blue-600 text-white'
+                  : answers[q.id]
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Question Card */}
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 lg:p-8">
+          <div className="mb-6">
+            <span className="text-sm text-gray-500">
+              {currentQuestion + 1} dari {testInfo.totalQuestions}
+            </span>
+          </div>
+
+          <h2 className="text-xl text-gray-900 dark:text-white mb-6">
+            {question.text}
+          </h2>
+
+          <div className="space-y-3">
+            {question.answers.map((answer) => (
+              <button
+                key={answer.id}
+                onClick={() => handleAnswer(question.id, answer.id)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  answers[question.id] === answer.id
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    answers[question.id] === answer.id
+                      ? 'border-blue-600 bg-blue-600'
+                      : 'border-gray-300'
+                  }`}>
+                    {answers[question.id] === answer.id && (
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                  <span>{answer.text}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-6">
+          <button
+            onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
+            disabled={currentQuestion === 0}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Sebelumnya</span>
+          </button>
+
+          {currentQuestion === sampleQuestions.length - 1 ? (
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Mengirim...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  <span>Kirim Jawaban</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentQuestion((prev) => Math.min(sampleQuestions.length - 1, prev + 1))}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <span>Selanjutnya</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
